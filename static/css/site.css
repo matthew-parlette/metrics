@@ -1,0 +1,19 @@
+canvas {
+    width: 100%;
+    height: auto;
+}
+
+.panel-heading, .panel-footer {
+    font-variant: small-caps;
+}
+
+.chart-legend ul {
+    list-style-type: none;
+}
+
+.chart-legend li span {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 5px;
+}

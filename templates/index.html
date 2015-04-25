@@ -1,0 +1,91 @@
+<html>
+<head>
+    <title>index</title>
+    <script src="{{ STATIC_URL }}js/jquery-2.1.3.min.js"></script>
+    <script src="{{ STATIC_URL }}js/Chart.min.js"></script>
+    <script src="{{ STATIC_URL }}js/moment-with-locales.js"></script>
+    {% load bootstrap3 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    <link href="{{ STATIC_URL }}css/site.css" media="all" rel="stylesheet">
+</head>
+<body>
+    {# Display django.contrib.messages as Bootstrap alerts #}
+    {% bootstrap_messages %}
+
+    {% block bootstrap3_content %}
+    <div class="container">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                Body
+            </div>
+            <div class="panel-body">
+                <canvas id="body"></canvas>
+            </div>
+            <div id="body-legend" class="panel-footer chart-legend"></div>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function(){
+            var ctx = $("#body").get(0).getContext("2d");
+            // Build labels for this week
+            dates = [];
+            labels = [];
+            // Set strings for date formatting
+            moment.locale('en', {
+                calendar : {
+                    lastDay : '[Yesterday]',
+                    sameDay : '[Today]',
+                    nextDay : '[Tomorrow]',
+                    lastWeek : 'dddd',
+                    nextWeek : 'dddd',
+                    sameElse : 'L'
+                }
+            });
+
+            for(i = 6; i >= 0; i--){
+                dates.push(moment().subtract(i, 'days'));
+            }
+            dates.forEach(function(d){
+                labels.push(moment(d).locale("en").calendar());
+            });
+            console.log("dates: " + dates);
+            console.log("labels: " + labels);
+            // Build dataset
+            dataset = {
+                label: "Weight",
+                fillColor: "rgba(0,0,220,0.6)",
+                strokeColor: "rgba(0,0,220,1)",
+                pointColor: "rgba(0,0,220,1)",
+                pointStrokeColor: "#fff",
+                pointHighlightFill: "#fff",
+                pointHighlightStroke: "rgba(0,0,220,0.6)",
+                data: []
+            };
+            var bodyChart = new Chart(ctx).Line({
+                labels: [],
+                datasets: [
+                    dataset
+                ]
+            },{scaleBeginAtZero: true});
+            $.get("/weight", function(data, status){
+                console.log(data);
+                data.forEach(function(entry){
+                    for(i = 0; i <= 6; i++){
+                        if (moment(entry["created"]).isSame(dates[i], 'day')) {
+                            console.log(entry["created"] + " matches " + dates[i])
+                            bodyChart.addData([entry["value"]], labels[i]);
+                            bodyChart.update();
+                            break;
+                        }
+                    }
+                    //bodyChart.datasets[0].points[].value = entry["value"];
+                    bodyChart.update();
+                    console.log(bodyChart.generateLegend());
+                    $('#body-legend').html(bodyChart.generateLegend());
+                });
+            });
+        });
+    </script>
+    {% endblock %}
+</body>
