@@ -8,6 +8,11 @@
     {% bootstrap_css %}
     {% bootstrap_javascript %}
     <link href="{{ STATIC_URL }}css/site.css" media="all" rel="stylesheet">
+    <script>
+        var aggregate = function(data) {
+
+        }
+    </script>
 </head>
 <body>
     {# Display django.contrib.messages as Bootstrap alerts #}
@@ -30,26 +35,36 @@
             var ctx = $("#body").get(0).getContext("2d");
             // Build labels for this week
             dates = [];
+            weeks = [];
             labels = [];
             // Set strings for date formatting
             moment.locale('en', {
                 calendar : {
                     lastDay : '[Yesterday]',
-                    sameDay : '[Today]',
+                    sameDay : '[This Week]',
                     nextDay : '[Tomorrow]',
-                    lastWeek : 'dddd',
+                    lastWeek : '[Last Week]',
                     nextWeek : 'dddd',
-                    sameElse : 'L'
+                    sameElse : 'L',
+                    sameWeek: '[This Week]'
                 }
             });
 
             for(i = 6; i >= 0; i--){
-                dates.push(moment().subtract(i, 'days'));
+                // dates.push(moment().subtract(i, 'days'));
+                dates.push(moment().subtract(i, 'weeks'));
+                if (i > 1) {
+                    labels.push(i + " weeks ago");
+                }
+                else if (i == 1) {
+                    labels.push("Last Week");
+                }
+                else {
+                    labels.push("This Week");
+                }
             }
-            dates.forEach(function(d){
-                labels.push(moment(d).locale("en").calendar());
-            });
             console.log("dates: " + dates);
+            console.log("weeks: " + weeks);
             console.log("labels: " + labels);
             // Build dataset
             dataset = {
@@ -60,23 +75,28 @@
                 pointStrokeColor: "#fff",
                 pointHighlightFill: "#fff",
                 pointHighlightStroke: "rgba(0,0,220,0.6)",
-                data: []
+                data: [0,0,0,0,0,0,0]
             };
             var bodyChart = new Chart(ctx).Line({
-                labels: [],
+                labels: labels,
                 datasets: [
                     dataset
                 ]
             },{scaleBeginAtZero: true});
             $.get("/weight", function(data, status){
                 console.log(data);
+                var weekEntries = [[],[],[],[],[],[],[]];
                 data.forEach(function(entry){
-                    for(i = 0; i <= 6; i++){
-                        if (moment(entry["created"]).isSame(dates[i], 'day')) {
-                            console.log(entry["created"] + " matches " + dates[i])
-                            bodyChart.addData([entry["value"]], labels[i]);
-                            bodyChart.update();
-                            break;
+                    for(i = 0; i <= 6; i++) {
+                        if (moment(entry["created"]).isAfter(dates[i].startOf('week'))) {
+                            console.log(entry["created"] + " is after " + dates[i].startOf('week'));
+                            if (moment(entry["created"]).isBefore(dates[i].endOf('week'))) {
+                                console.log(entry["created"] + " is before " + dates[i].endOf('week'));
+                                weekEntries[i].push(entry["value"]);
+                                // bodyChart.addData([entry["value"]], labels[i]);
+                                // bodyChart.update();
+                                break;
+                            }
                         }
                     }
                     //bodyChart.datasets[0].points[].value = entry["value"];
@@ -84,6 +104,17 @@
                     console.log(bodyChart.generateLegend());
                     $('#body-legend').html(bodyChart.generateLegend());
                 });
+                console.log("weekEntries: " + weekEntries);
+                for(i = 0; i <= 6; i++) {
+                    if (weekEntries[i].length > 0) {
+                        var sum = 0;
+                        weekEntries[i].forEach(function(entry){
+                            sum += entry;
+                        });
+                        bodyChart.datasets[0].points[i].value = sum / weekEntries[i].length;
+                        bodyChart.update();
+                    }
+                }
             });
         });
     </script>
