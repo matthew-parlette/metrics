@@ -31,6 +31,60 @@
             }
             return result;
         }
+        var intervalsAsLabels = function(intervals, aggregation) {
+            var labels = [];
+            for(i = intervals.length - 1; i >= 0; i--){
+                if (i > 1) { labels.push(i + " " + aggregation + "s ago"); }
+                else if (i == 1) {
+                    // Second latest
+                    if (aggregation != 'day') { labels.push("last " + aggregation); }
+                    else { labels.push("yesterday"); }
+                }
+                else {
+                    // Latest
+                    if (aggregation != 'day') { labels.push("this " + aggregation); }
+                    else { labels.push("today"); }
+                }
+            }
+            return labels;
+        }
+        var body = new function() {
+            this.divid = "body";
+            this.aggregation = "week";
+            this.chart = undefined;
+            this.numIntervals = 7;
+            this.refresh = function() {
+                // Replace canvas to clear any previous gra
+                $('#' + this.divid).replaceWith('<canvas id="' + this.divid + '"></canvas>');
+                var ctx = $("#" + this.divid).get(0).getContext("2d");
+                // Build labels for this week
+                intervals = [];
+
+                // Build intervals for this aggregation
+                for(i = this.numIntervals - 1; i >= 0; i--) {
+                    intervals.push(moment().subtract(i, this.aggregation));
+                }
+                // Build dataset
+                dataset = {
+                    label: "Weight",
+                    fillColor: "rgba(0,0,220,0.6)",
+                    strokeColor: "rgba(0,0,220,1)",
+                    pointColor: "rgba(0,0,220,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(0,0,220,0.6)",
+                    data: [0,0,0,0,0,0,0]
+                };
+                var chart = new Chart(ctx).Line({
+                    labels: intervalsAsLabels(intervals, this.aggregation),
+                    datasets: [
+                        dataset
+                    ]
+                },{scaleBeginAtZero: true});
+                populateDataSet(chart, '/weight', this.aggregation, 0, intervals);
+                $('#body-legend').html(chart.generateLegend());
+            }
+        }
         var updateChart = function(chart, dataset, data) {
             console.log("Setting chart dataset " + dataset + " to " + data);
             for (i = 0; i < data.length; i++) {
@@ -38,15 +92,15 @@
             }
             chart.update();
         }
-        var populateDataSet = function(chart, path, aggregation, datasetId) {
+        var populateDataSet = function(chart, path, aggregation, datasetId, intervals) {
             console.log("Building chart from " + path);
             $.get(path, function(data, status){
                 console.log(data);
                 var rawEntries = [[],[],[],[],[],[],[]];
                 data.forEach(function(entry){
                     for(i = 0; i <= rawEntries.length; i++) {
-                        if (moment(entry["created"]).isAfter(dates[i].startOf(aggregation))) {
-                            if (moment(entry["created"]).isBefore(dates[i].endOf(aggregation))) {
+                        if (moment(entry["created"]).isAfter(intervals[i].startOf(aggregation))) {
+                            if (moment(entry["created"]).isBefore(intervals[i].endOf(aggregation))) {
                                 rawEntries[i].push(entry["value"]);
                                 break;
                             }
@@ -88,45 +142,8 @@
             console.log($(this).html());
             $(this).siblings().removeClass('active');
             $(this).addClass('active');
-            var ctx = $("#" + this.dataset.chart).get(0).getContext("2d");
-            // Build labels for this week
-            dates = [];
-            weeks = [];
-            labels = [];
-
-            for(i = 6; i >= 0; i--){
-                // dates.push(moment().subtract(i, 'days'));
-                dates.push(moment().subtract(i, this.dataset.aggregation));
-                if (i > 1) {
-                    labels.push(i + " " + this.dataset.aggregation + "s ago");
-                }
-                else if (i == 1) {
-                    if (this.dataset.aggregation != 'day') {
-                        labels.push("last " + this.dataset.aggregation);
-                    }
-                    else{ labels.push("today"); }
-                }
-                else { labels.push("this " + this.dataset.aggregation); }
-            }
-            // Build dataset
-            dataset = {
-                label: "Weight",
-                fillColor: "rgba(0,0,220,0.6)",
-                strokeColor: "rgba(0,0,220,1)",
-                pointColor: "rgba(0,0,220,1)",
-                pointStrokeColor: "#fff",
-                pointHighlightFill: "#fff",
-                pointHighlightStroke: "rgba(0,0,220,0.6)",
-                data: [0,0,0,0,0,0,0]
-            };
-            var bodyChart = new Chart(ctx).Line({
-                labels: labels,
-                datasets: [
-                    dataset
-                ]
-            },{scaleBeginAtZero: true});
-            populateDataSet(bodyChart, '/weight', this.dataset.aggregation, 0);
-            $('#body-legend').html(bodyChart.generateLegend());
+            window[this.dataset.chart].aggregation = this.dataset.aggregation;
+            window[this.dataset.chart].refresh();
         });
     </script>
     {% endblock %}
