@@ -10,15 +10,34 @@
     <link href="{{ STATIC_URL }}css/site.css" media="all" rel="stylesheet">
     <script>
         // condense an array of arrays down to an array of numbers (averages)
-        var aggregate = function(data) {
+        var aggregate = function(data, aggregation, intervals) {
+            console.log("Aggregating data (" + data + ") over intervals (" + intervals + ") by " + aggregation);
             var result = [];
-            for(i = 0; i < data.length; i++) {
-                if (data[i].length > 0) {
+
+            // Create a 2d array for raw entries that fall into each interval
+            var raw = [];
+            for(i = 0;i < intervals.length; i++) {raw.push([]);}
+
+            // Populate the raw entries
+            data.forEach(function(entry){
+                for(i = 0; i < intervals.length; i++) {
+                    if (moment(entry["created"]).isAfter(intervals[i].startOf(aggregation))) {
+                        if (moment(entry["created"]).isBefore(intervals[i].endOf(aggregation))) {
+                            raw[i].push(entry["value"]);
+                            break;
+                        }
+                    }
+                }
+            });
+
+            // Aggregate the raw entries into one point per interval
+            for(i = 0; i < raw.length; i++) {
+                if (raw[i].length > 0) {
                     var sum = 0;
-                    data[i].forEach(function(entry){
+                    raw[i].forEach(function(entry){
                         sum += entry;
                     });
-                    result[i] = sum / data[i].length;
+                    result[i] = sum / raw[i].length;
                 }
                 else if (i > 0) {
                     // if there is no value here, use the previous value
@@ -31,31 +50,66 @@
             }
             return result;
         }
-        var updateChart = function(chart, dataset, data) {
-            console.log("Setting chart dataset " + dataset + " to " + data);
-            for (i = 0; i < data.length; i++) {
-                chart.datasets[dataset].points[i].value = data[i];
+        var intervalsAsLabels = function(intervals, aggregation) {
+            var labels = [];
+            for(i = intervals.length - 1; i >= 0; i--){
+                if (i > 1) { labels.push(i + " " + aggregation + "s ago"); }
+                else if (i == 1) {
+                    // Second latest
+                    if (aggregation != 'day') { labels.push("last " + aggregation); }
+                    else { labels.push("yesterday"); }
+                }
+                else {
+                    // Latest
+                    if (aggregation != 'day') { labels.push("this " + aggregation); }
+                    else { labels.push("today"); }
+                }
             }
-            chart.update();
+            return labels;
         }
-        var populateDataSet = function(chart, path, aggregation, datasetId) {
-            console.log("Building chart from " + path);
-            $.get(path, function(data, status){
-                console.log(data);
-                var rawEntries = [[],[],[],[],[],[],[]];
-                data.forEach(function(entry){
-                    for(i = 0; i <= rawEntries.length; i++) {
-                        if (moment(entry["created"]).isAfter(dates[i].startOf(aggregation))) {
-                            if (moment(entry["created"]).isBefore(dates[i].endOf(aggregation))) {
-                                rawEntries[i].push(entry["value"]);
-                                break;
-                            }
-                        }
-                    }
+        var body = new function() {
+            this.divid = "body";
+            this.aggregation = undefined;
+            this.chart = undefined;
+            this.numIntervals = 7;
+            this.intervals = undefined;
+            this.refresh = function() {
+                // Replace canvas to clear any previous gra
+                $('#' + this.divid).replaceWith('<canvas id="' + this.divid + '"></canvas>');
+                var ctx = $("#" + this.divid).get(0).getContext("2d");
+                // Build labels for this week
+                this.intervals = [];
+
+                // Build intervals for this aggregation
+                console.log("Building intervals from aggregation '" + this.aggregation + "'")
+                for(i = this.numIntervals - 1; i >= 0; i--) {
+                    this.intervals.push(moment().subtract(i, this.aggregation));
+                }
+                console.log("Intervals: " + this.intervals)
+                // Build dataset
+                $.when(
+                    $.get('/weight')
+                ).then( function (rawWeight) {
+                    dataset = {
+                        label: "Weight",
+                        fillColor: "rgba(0,0,220,0.6)",
+                        strokeColor: "rgba(0,0,220,1)",
+                        pointColor: "rgba(0,0,220,1)",
+                        pointStrokeColor: "#fff",
+                        pointHighlightFill: "#fff",
+                        pointHighlightStroke: "rgba(0,0,220,0.6)",
+                        data: aggregate(rawWeight, body.aggregation, body.intervals)
+                    };
+                    var chart = new Chart(ctx).Line({
+                        labels: intervalsAsLabels(body.intervals, body.aggregation),
+                        datasets: [
+                            dataset
+                        ]
+                    },{scaleBeginAtZero: true});
+                    // populateDataSet(chart, '/weight', this.aggregation, 0, intervals);
+                    $('#body-legend').html(chart.generateLegend());
                 });
-                datasetToAdd = aggregate(rawEntries);
-                updateChart(chart, datasetId, datasetToAdd);
-            });
+            }
         }
     </script>
 </head>
@@ -85,48 +139,10 @@
             $("#body-panel > .panel-heading > [class*=aggregation] > [data-aggregation='week']").trigger('click');
         });
         $('.aggregation button').click(function(){
-            console.log($(this).html());
             $(this).siblings().removeClass('active');
             $(this).addClass('active');
-            var ctx = $("#" + this.dataset.chart).get(0).getContext("2d");
-            // Build labels for this week
-            dates = [];
-            weeks = [];
-            labels = [];
-
-            for(i = 6; i >= 0; i--){
-                // dates.push(moment().subtract(i, 'days'));
-                dates.push(moment().subtract(i, this.dataset.aggregation));
-                if (i > 1) {
-                    labels.push(i + " " + this.dataset.aggregation + "s ago");
-                }
-                else if (i == 1) {
-                    if (this.dataset.aggregation != 'day') {
-                        labels.push("last " + this.dataset.aggregation);
-                    }
-                    else{ labels.push("today"); }
-                }
-                else { labels.push("this " + this.dataset.aggregation); }
-            }
-            // Build dataset
-            dataset = {
-                label: "Weight",
-                fillColor: "rgba(0,0,220,0.6)",
-                strokeColor: "rgba(0,0,220,1)",
-                pointColor: "rgba(0,0,220,1)",
-                pointStrokeColor: "#fff",
-                pointHighlightFill: "#fff",
-                pointHighlightStroke: "rgba(0,0,220,0.6)",
-                data: [0,0,0,0,0,0,0]
-            };
-            var bodyChart = new Chart(ctx).Line({
-                labels: labels,
-                datasets: [
-                    dataset
-                ]
-            },{scaleBeginAtZero: true});
-            populateDataSet(bodyChart, '/weight', this.dataset.aggregation, 0);
-            $('#body-legend').html(bodyChart.generateLegend());
+            window[this.dataset.chart].aggregation = this.dataset.aggregation;
+            window[this.dataset.chart].refresh();
         });
     </script>
     {% endblock %}
