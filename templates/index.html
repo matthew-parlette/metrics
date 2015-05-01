@@ -10,15 +10,34 @@
     <link href="{{ STATIC_URL }}css/site.css" media="all" rel="stylesheet">
     <script>
         // condense an array of arrays down to an array of numbers (averages)
-        var aggregate = function(data) {
+        var aggregate = function(data, aggregation, intervals) {
+            console.log("Aggregating data (" + data + ") over intervals (" + intervals + ") by " + aggregation);
             var result = [];
-            for(i = 0; i < data.length; i++) {
-                if (data[i].length > 0) {
+
+            // Create a 2d array for raw entries that fall into each interval
+            var raw = [];
+            for(i = 0;i < intervals.length; i++) {raw.push([]);}
+
+            // Populate the raw entries
+            data.forEach(function(entry){
+                for(i = 0; i < intervals.length; i++) {
+                    if (moment(entry["created"]).isAfter(intervals[i].startOf(aggregation))) {
+                        if (moment(entry["created"]).isBefore(intervals[i].endOf(aggregation))) {
+                            raw[i].push(entry["value"]);
+                            break;
+                        }
+                    }
+                }
+            });
+
+            // Aggregate the raw entries into one point per interval
+            for(i = 0; i < raw.length; i++) {
+                if (raw[i].length > 0) {
                     var sum = 0;
-                    data[i].forEach(function(entry){
+                    raw[i].forEach(function(entry){
                         sum += entry;
                     });
-                    result[i] = sum / data[i].length;
+                    result[i] = sum / raw[i].length;
                 }
                 else if (i > 0) {
                     // if there is no value here, use the previous value
@@ -50,66 +69,47 @@
         }
         var body = new function() {
             this.divid = "body";
-            this.aggregation = "week";
+            this.aggregation = undefined;
             this.chart = undefined;
             this.numIntervals = 7;
+            this.intervals = undefined;
             this.refresh = function() {
                 // Replace canvas to clear any previous gra
                 $('#' + this.divid).replaceWith('<canvas id="' + this.divid + '"></canvas>');
                 var ctx = $("#" + this.divid).get(0).getContext("2d");
                 // Build labels for this week
-                intervals = [];
+                this.intervals = [];
 
                 // Build intervals for this aggregation
+                console.log("Building intervals from aggregation '" + this.aggregation + "'")
                 for(i = this.numIntervals - 1; i >= 0; i--) {
-                    intervals.push(moment().subtract(i, this.aggregation));
+                    this.intervals.push(moment().subtract(i, this.aggregation));
                 }
+                console.log("Intervals: " + this.intervals)
                 // Build dataset
-                dataset = {
-                    label: "Weight",
-                    fillColor: "rgba(0,0,220,0.6)",
-                    strokeColor: "rgba(0,0,220,1)",
-                    pointColor: "rgba(0,0,220,1)",
-                    pointStrokeColor: "#fff",
-                    pointHighlightFill: "#fff",
-                    pointHighlightStroke: "rgba(0,0,220,0.6)",
-                    data: [0,0,0,0,0,0,0]
-                };
-                var chart = new Chart(ctx).Line({
-                    labels: intervalsAsLabels(intervals, this.aggregation),
-                    datasets: [
-                        dataset
-                    ]
-                },{scaleBeginAtZero: true});
-                populateDataSet(chart, '/weight', this.aggregation, 0, intervals);
-                $('#body-legend').html(chart.generateLegend());
-            }
-        }
-        var updateChart = function(chart, dataset, data) {
-            console.log("Setting chart dataset " + dataset + " to " + data);
-            for (i = 0; i < data.length; i++) {
-                chart.datasets[dataset].points[i].value = data[i];
-            }
-            chart.update();
-        }
-        var populateDataSet = function(chart, path, aggregation, datasetId, intervals) {
-            console.log("Building chart from " + path);
-            $.get(path, function(data, status){
-                console.log(data);
-                var rawEntries = [[],[],[],[],[],[],[]];
-                data.forEach(function(entry){
-                    for(i = 0; i <= rawEntries.length; i++) {
-                        if (moment(entry["created"]).isAfter(intervals[i].startOf(aggregation))) {
-                            if (moment(entry["created"]).isBefore(intervals[i].endOf(aggregation))) {
-                                rawEntries[i].push(entry["value"]);
-                                break;
-                            }
-                        }
-                    }
+                $.when(
+                    $.get('/weight')
+                ).then( function (rawWeight) {
+                    dataset = {
+                        label: "Weight",
+                        fillColor: "rgba(0,0,220,0.6)",
+                        strokeColor: "rgba(0,0,220,1)",
+                        pointColor: "rgba(0,0,220,1)",
+                        pointStrokeColor: "#fff",
+                        pointHighlightFill: "#fff",
+                        pointHighlightStroke: "rgba(0,0,220,0.6)",
+                        data: aggregate(rawWeight, body.aggregation, body.intervals)
+                    };
+                    var chart = new Chart(ctx).Line({
+                        labels: intervalsAsLabels(body.intervals, body.aggregation),
+                        datasets: [
+                            dataset
+                        ]
+                    },{scaleBeginAtZero: true});
+                    // populateDataSet(chart, '/weight', this.aggregation, 0, intervals);
+                    $('#body-legend').html(chart.generateLegend());
                 });
-                datasetToAdd = aggregate(rawEntries);
-                updateChart(chart, datasetId, datasetToAdd);
-            });
+            }
         }
     </script>
 </head>
@@ -139,7 +139,6 @@
             $("#body-panel > .panel-heading > [class*=aggregation] > [data-aggregation='week']").trigger('click');
         });
         $('.aggregation button').click(function(){
-            console.log($(this).html());
             $(this).siblings().removeClass('active');
             $(this).addClass('active');
             window[this.dataset.chart].aggregation = this.dataset.aggregation;
