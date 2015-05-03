@@ -43,6 +43,7 @@ PREREQ_APPS = [
 
 PROJECT_APPS = [
     'weight',
+    'bodyfat',
 ]
 
 INSTALLED_APPS = PREREQ_APPS + PROJECT_APPS
