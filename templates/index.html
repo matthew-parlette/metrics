@@ -149,10 +149,21 @@
         <div id="body-panel" class="panel panel-info">
             <div class="panel-heading">
                 Body
-                <div class="pull-right btn-group btn-group-xs aggregation" role="group" aria-label="Aggregation">
-                    <button type="button" class="btn btn-default" data-chart="body" data-aggregation="month">monthly</button>
-                    <button type="button" class="btn btn-default" data-chart="body" data-aggregation="week">weekly</button>
-                    <button type="button" class="btn btn-default" data-chart="body" data-aggregation="day">daily</button>
+                <div class="pull-right">
+                    <div class="btn-group add-entry">
+                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                            +
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><input class="input" type="text" name="weight" placeholder="weight"></li>
+                            <li><input class="input" type="text" name="bodyfat" placeholder="body fat"></li>
+                        </ul>
+                    </div>
+                    <div class="btn-group btn-group-xs aggregation" role="group" aria-label="Aggregation">
+                        <button type="button" class="btn btn-default" data-chart="body" data-aggregation="month">monthly</button>
+                        <button type="button" class="btn btn-default" data-chart="body" data-aggregation="week">weekly</button>
+                        <button type="button" class="btn btn-default" data-chart="body" data-aggregation="day">daily</button>
+                    </div>
                 </div>
             </div>
             <div class="panel-body">
@@ -163,7 +174,8 @@
     </div>
     <script>
         $(document).ready(function(){
-            $("#body-panel > .panel-heading > [class*=aggregation] > [data-aggregation='week']").trigger('click');
+            $(".dropdown-toggle").dropdown();
+            $("#body-panel > .panel-heading > .pull-right > [class*=aggregation] > [data-aggregation='week']").trigger('click');
         });
         $('.aggregation button').click(function(){
             $(this).siblings().removeClass('active');
