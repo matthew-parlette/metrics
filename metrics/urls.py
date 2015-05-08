@@ -13,4 +13,5 @@ urlpatterns = patterns('',
     url(r'^$', views.index),
     url(r'^', include('weight.urls')),
     url(r'^', include('bodyfat.urls')),
+    url(r'^', include('calories.urls')),
 )
