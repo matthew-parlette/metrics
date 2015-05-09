@@ -4,114 +4,12 @@
     <script src="{{ STATIC_URL }}js/jquery-2.1.3.min.js"></script>
     <script src="{{ STATIC_URL }}js/Chart.min.js"></script>
     <script src="{{ STATIC_URL }}js/moment-with-locales.js"></script>
+    <script src="{{ STATIC_URL }}js/common.js"></script>
+    <script src="{{ STATIC_URL }}js/body.js"></script>
     {% load bootstrap3 %}
     {% bootstrap_css %}
     {% bootstrap_javascript %}
     <link href="{{ STATIC_URL }}css/site.css" media="all" rel="stylesheet">
-    <script>
-        // condense an array of arrays down to an array of numbers (averages)
-        var aggregate = function(data, aggregation, intervals) {
-            console.log("Aggregating data (" + data + ") over intervals (" + intervals + ") by " + aggregation);
-            var result = [];
-
-            // Create a 2d array for raw entries that fall into each interval
-            var raw = [];
-            for(i = 0;i < intervals.length; i++) {raw.push([]);}
-
-            // Populate the raw entries
-            data.forEach(function(entry){
-                for(i = 0; i < intervals.length; i++) {
-                    if (moment(entry["created"]).isAfter(intervals[i].startOf(aggregation))) {
-                        if (moment(entry["created"]).isBefore(intervals[i].endOf(aggregation))) {
-                            raw[i].push(entry["value"]);
-                            break;
-                        }
-                    }
-                }
-            });
-
-            // Aggregate the raw entries into one point per interval
-            for(i = 0; i < raw.length; i++) {
-                if (raw[i].length > 0) {
-                    var sum = 0;
-                    raw[i].forEach(function(entry){
-                        sum += entry;
-                    });
-                    result[i] = sum / raw[i].length;
-                }
-                else if (i > 0) {
-                    // if there is no value here, use the previous value
-                    result[i] = result[i-1];
-                }
-                else {
-                    // if there is still no value, just use 0 for this point
-                    result[i] = 0;
-                }
-            }
-            return result;
-        }
-        var intervalsAsLabels = function(intervals, aggregation) {
-            var labels = [];
-            for(i = intervals.length - 1; i >= 0; i--){
-                if (i > 1) { labels.push(i + " " + aggregation + "s ago"); }
-                else if (i == 1) {
-                    // Second latest
-                    if (aggregation != 'day') { labels.push("last " + aggregation); }
-                    else { labels.push("yesterday"); }
-                }
-                else {
-                    // Latest
-                    if (aggregation != 'day') { labels.push("this " + aggregation); }
-                    else { labels.push("today"); }
-                }
-            }
-            return labels;
-        }
-        var body = new function() {
-            this.divid = "body";
-            this.aggregation = undefined;
-            this.chart = undefined;
-            this.numIntervals = 7;
-            this.intervals = undefined;
-            this.refresh = function() {
-                // Replace canvas to clear any previous gra
-                $('#' + this.divid).replaceWith('<canvas id="' + this.divid + '"></canvas>');
-                var ctx = $("#" + this.divid).get(0).getContext("2d");
-                // Build labels for this week
-                this.intervals = [];
-
-                // Build intervals for this aggregation
-                console.log("Building intervals from aggregation '" + this.aggregation + "'")
-                for(i = this.numIntervals - 1; i >= 0; i--) {
-                    this.intervals.push(moment().subtract(i, this.aggregation));
-                }
-                console.log("Intervals: " + this.intervals)
-                // Build dataset
-                $.when(
-                    $.get('/weight')
-                ).then( function (rawWeight) {
-                    dataset = {
-                        label: "Weight",
-                        fillColor: "rgba(0,0,220,0.6)",
-                        strokeColor: "rgba(0,0,220,1)",
-                        pointColor: "rgba(0,0,220,1)",
-                        pointStrokeColor: "#fff",
-                        pointHighlightFill: "#fff",
-                        pointHighlightStroke: "rgba(0,0,220,0.6)",
-                        data: aggregate(rawWeight, body.aggregation, body.intervals)
-                    };
-                    var chart = new Chart(ctx).Line({
-                        labels: intervalsAsLabels(body.intervals, body.aggregation),
-                        datasets: [
-                            dataset
-                        ]
-                    },{scaleBeginAtZero: true});
-                    // populateDataSet(chart, '/weight', this.aggregation, 0, intervals);
-                    $('#body-legend').html(chart.generateLegend());
-                });
-            }
-        }
-    </script>
 </head>
 <body>
     {# Display django.contrib.messages as Bootstrap alerts #}
@@ -122,10 +20,21 @@
         <div id="body-panel" class="panel panel-info">
             <div class="panel-heading">
                 Body
-                <div class="pull-right btn-group btn-group-xs aggregation" role="group" aria-label="Aggregation">
-                    <button type="button" class="btn btn-default" data-chart="body" data-aggregation="month">monthly</button>
-                    <button type="button" class="btn btn-default" data-chart="body" data-aggregation="week">weekly</button>
-                    <button type="button" class="btn btn-default" data-chart="body" data-aggregation="day">daily</button>
+                <div class="pull-right">
+                    <div class="btn-group add-entry">
+                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                            +
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><input class="input" type="text" name="weight" placeholder="weight"></li>
+                            <li><input class="input" type="text" name="bodyfat" placeholder="body fat"></li>
+                        </ul>
+                    </div>
+                    <div class="btn-group btn-group-xs aggregation" role="group" aria-label="Aggregation">
+                        <button type="button" class="btn btn-default" data-chart="body" data-aggregation="month">monthly</button>
+                        <button type="button" class="btn btn-default" data-chart="body" data-aggregation="week">weekly</button>
+                        <button type="button" class="btn btn-default" data-chart="body" data-aggregation="day">daily</button>
+                    </div>
                 </div>
             </div>
             <div class="panel-body">
@@ -134,16 +43,5 @@
             <div id="body-legend" class="panel-footer chart-legend"></div>
         </div>
     </div>
-    <script>
-        $(document).ready(function(){
-            $("#body-panel > .panel-heading > [class*=aggregation] > [data-aggregation='week']").trigger('click');
-        });
-        $('.aggregation button').click(function(){
-            $(this).siblings().removeClass('active');
-            $(this).addClass('active');
-            window[this.dataset.chart].aggregation = this.dataset.aggregation;
-            window[this.dataset.chart].refresh();
-        });
-    </script>
     {% endblock %}
 </body>
