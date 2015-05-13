@@ -1,6 +1,7 @@
 // condense an array of arrays down to an array of numbers (averages)
-var aggregate = function(data, aggregation, intervals) {
+var aggregate = function(data, aggregation, intervals, strategy) {
     console.log("Aggregating data (" + data + ") over intervals (" + intervals + ") by " + aggregation);
+    console.log("Using aggregation strategy of " + strategy);
     var result = [];
 
     // Create a 2d array for raw entries that fall into each interval
@@ -26,7 +27,12 @@ var aggregate = function(data, aggregation, intervals) {
             raw[i].forEach(function(entry){
                 sum += entry;
             });
-            result[i] = sum / raw[i].length;
+            if (strategy == "sum") {
+                result[i] = sum;
+            }
+            if (strategy == "average") {
+                result[i] = sum / raw[i].length;
+            }
         }
         else if (i > 0) {
             // if there is no value here, use the previous value
@@ -68,4 +74,5 @@ $(document).ready(function(){
 
     // Click the default buttons for each chart
     $("#body-panel > .panel-heading > .pull-right > [class*=aggregation] > [data-aggregation='week']").trigger('click');
+    $("#nutrition-panel > .panel-heading > .pull-right > [class*=aggregation] > [data-aggregation='day']").trigger('click');
 });
