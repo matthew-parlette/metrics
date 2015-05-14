@@ -13,7 +13,7 @@ var aggregate = function(data, aggregation, intervals, strategy) {
         for(i = 0; i < intervals.length; i++) {
             if (moment(entry["created"]).isAfter(intervals[i].startOf(aggregation))) {
                 if (moment(entry["created"]).isBefore(intervals[i].endOf(aggregation))) {
-                    raw[i].push(entry["value"]);
+                    raw[i].push(entry);
                     break;
                 }
             }
@@ -23,15 +23,35 @@ var aggregate = function(data, aggregation, intervals, strategy) {
     // Aggregate the raw entries into one point per interval
     for(i = 0; i < raw.length; i++) {
         if (raw[i].length > 0) {
-            var sum = 0;
+            console.log(raw[i]);
+            console.log("i = " + i + ", raw[i].length = " + raw[i].length);
+            // Initialize the sum dictionary
+            var sum = {};
+
+            // For each entry in i, add up all variables in each entry
             raw[i].forEach(function(entry){
-                sum += entry;
+                console.log("Processing entry of");
+                console.log(entry);
+                for (var key in entry){
+                    if (key != "created") {
+                        console.log("Processing key " + key + " in entry " + entry);
+                        if (key in sum) { sum[key] += entry[key]; }
+                        else { sum[key] = entry[key]; }
+                    }
+                }
             });
-            if (strategy == "sum") {
-                result[i] = sum;
-            }
-            if (strategy == "average") {
-                result[i] = sum / raw[i].length;
+            console.log("sum calculated as");
+            console.log(sum)
+            result[i] = {}
+            for (var key in sum) {
+                if (key != "created") {
+                    if (strategy == "sum") {
+                        result[i][key] = sum[key];
+                    }
+                    if (strategy == "average") {
+                        result[i][key] = sum[key] / raw[i].length;
+                    }
+                }
             }
         }
         else if (i > 0) {
@@ -40,9 +60,10 @@ var aggregate = function(data, aggregation, intervals, strategy) {
         }
         else {
             // if there is still no value, just use 0 for this point
-            result[i] = 0;
+            result[i] = undefined;
         }
     }
+    console.log("aggregate() returning " + result);
     return result;
 }
 var intervalsAsLabels = function(intervals, aggregation) {

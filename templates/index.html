@@ -6,6 +6,7 @@
     <script src="{{ STATIC_URL }}js/moment-with-locales.js"></script>
     <script src="{{ STATIC_URL }}js/common.js"></script>
     <script src="{{ STATIC_URL }}js/body.js"></script>
+    <script src="{{ STATIC_URL }}js/nutrition.js"></script>
     {% load bootstrap3 %}
     {% bootstrap_css %}
     {% bootstrap_javascript %}
@@ -41,6 +42,30 @@
                 <canvas id="body"></canvas>
             </div>
             <div id="body-legend" class="panel-footer chart-legend"></div>
+        </div>
+        <div id="nutrition-panel" class="panel panel-info">
+            <div class="panel-heading">
+                Nutrition
+                <div class="pull-right">
+                    <div class="btn-group add-entry">
+                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                            +
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><input class="input" type="text" name="calories" placeholder="calories"></li>
+                        </ul>
+                    </div>
+                    <div class="btn-group btn-group-xs aggregation" role="group" aria-label="Aggregation">
+                        <button type="button" class="btn btn-default" data-chart="nutrition" data-aggregation="month">monthly</button>
+                        <button type="button" class="btn btn-default" data-chart="nutrition" data-aggregation="week">weekly</button>
+                        <button type="button" class="btn btn-default" data-chart="nutrition" data-aggregation="day">daily</button>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-nutrition">
+                <canvas id="nutrition"></canvas>
+            </div>
+            <!-- <div id="nutrition-legend" class="panel-footer chart-legend"></div> -->
         </div>
     </div>
     {% endblock %}
