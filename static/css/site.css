@@ -17,3 +17,12 @@ canvas {
     height: 10px;
     margin-right: 5px;
 }
+#nutrition-panel .panel-body {
+    width: 100%;
+}
+
+#nutrition-calories-actual,
+#nutrition-calories-target {
+    width: 49%;
+    height: auto;
+}

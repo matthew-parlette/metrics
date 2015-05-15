@@ -1,6 +1,7 @@
 var body = new function() {
     this.divid = "body";
     this.aggregation = undefined;
+    this.aggregation_strategy = "average";
     this.chart = undefined;
     this.numIntervals = 7;
     this.intervals = undefined;
@@ -25,6 +26,8 @@ var body = new function() {
             console.log(rawWeight[0]);
             console.log(rawBodyfat[0]);
             console.log("Building weight dataset")
+            aggregatedWeight = aggregate(rawWeight[0], body.aggregation, body.intervals, body.aggregation_strategy);
+            console.log(aggregatedWeight);
             weight = {
                 label: "Weight",
                 fillColor: "rgba(0,0,220,0.6)",
@@ -33,15 +36,15 @@ var body = new function() {
                 pointStrokeColor: "#fff",
                 pointHighlightFill: "#fff",
                 pointHighlightStroke: "rgba(0,0,220,0.6)",
-                data: aggregate(rawWeight[0], body.aggregation, body.intervals)
+                data: aggregatedWeight.map(function(entry){ if (entry) {return entry["value"]; } else { return 0; } })
             };
             console.log("Building bodyfat dataset")
-            var bodyfat = aggregate(rawBodyfat[0], body.aggregation, body.intervals);
+            var bodyfat = aggregate(rawBodyfat[0], body.aggregation, body.intervals, body.aggregation_strategy);
             console.log(bodyfat);
             var leanMass = [];
             for(i = 0; i < weight['data'].length; i++){
-                if (bodyfat[i] > 0) {
-                    leanMass.push(weight['data'][i] - (weight['data'][i] * (bodyfat[i] * 0.01)));
+                if (bodyfat[i] && bodyfat[i]['value'] > 0) {
+                    leanMass.push(weight['data'][i] - (weight['data'][i] * (bodyfat[i]['value'] * 0.01)));
                 } else {
                     leanMass.push(0);
                 }
