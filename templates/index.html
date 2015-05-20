@@ -1,75 +1,67 @@
+<!DOCTYPE html>
 <html>
-<head>
-    <title>index</title>
-    <script src="{{ STATIC_URL }}js/jquery-2.1.3.min.js"></script>
-    <script src="{{ STATIC_URL }}js/Chart.min.js"></script>
-    <!-- <script src=https://rawgit.com/FVANCOP/ChartNew.js/master/ChartNew.js ></script> -->
-    <script src="{{ STATIC_URL }}js/moment-with-locales.js"></script>
-    <script src="{{ STATIC_URL }}js/common.js"></script>
-    <script src="{{ STATIC_URL }}js/body.js"></script>
-    <script src="{{ STATIC_URL }}js/nutrition.js"></script>
-    {% load bootstrap3 %}
-    {% bootstrap_css %}
-    {% bootstrap_javascript %}
-    <link href="{{ STATIC_URL }}css/site.css" media="all" rel="stylesheet">
-    <link href='http://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'>
-</head>
-<body>
-    {# Display django.contrib.messages as Bootstrap alerts #}
-    {% bootstrap_messages %}
+    <head>
+        <meta charset="utf-8" />
+        <title>Impressive CSS3 Product Showcase | Tutorialzine Demo</title>
 
-    {% block bootstrap3_content %}
-    <div class="container">
-        <div id="body-panel" class="panel panel-info">
-            <div class="panel-heading">
-                Body
-                <div class="pull-right">
-                    <div class="btn-group add-entry">
-                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                            +
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><input class="input" type="text" name="weight" placeholder="weight"></li>
-                            <li><input class="input" type="text" name="bodyfat" placeholder="body fat"></li>
-                        </ul>
-                    </div>
-                    <div class="btn-group btn-group-xs aggregation" role="group" aria-label="Aggregation">
-                        <button type="button" class="btn btn-default" data-chart="body" data-aggregation="month">monthly</button>
-                        <button type="button" class="btn btn-default" data-chart="body" data-aggregation="week">weekly</button>
-                        <button type="button" class="btn btn-default" data-chart="body" data-aggregation="day">daily</button>
-                    </div>
-                </div>
-            </div>
-            <div class="panel-body">
+        <!-- Google Webfonts and our stylesheet -->
+        <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans+Narrow|Open+Sans:300" />
+        <link href="{{ STATIC_URL }}css/site.css" media="all" rel="stylesheet">
+
+        <!--[if lt IE 9]>
+          <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+    </head>
+
+    <body>
+
+		<div id="impress" class="impress-not-supported">
+
+			<div id="intro" class="step" data-x="0" data-y="0">
+		        <h2>Metrics</h2>
+		        <p>by Matt Parlette</p>
+		    </div>
+
+		    <div id="body-slide" class="step" data-x="1100" data-y="1200" data-scale="1.8" data-rotate="190">
+		        <h2>Body</h2>
                 <canvas id="body"></canvas>
-            </div>
-            <div id="body-legend" class="panel-footer chart-legend"></div>
-        </div>
-        <div id="nutrition-panel" class="panel panel-info">
-            <div class="panel-heading">
-                Nutrition
-                <div class="pull-right">
-                    <div class="btn-group add-entry">
-                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                            +
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><input class="input" type="text" name="calories" placeholder="calories"></li>
-                        </ul>
-                    </div>
-                    <div class="btn-group btn-group-xs aggregation" role="group" aria-label="Aggregation">
-                        <button type="button" class="btn btn-default" data-chart="nutrition" data-aggregation="month">monthly</button>
-                        <button type="button" class="btn btn-default" data-chart="nutrition" data-aggregation="week">weekly</button>
-                        <button type="button" class="btn btn-default" data-chart="nutrition" data-aggregation="day">daily</button>
-                    </div>
-                </div>
-            </div>
-            <div class="panel-body" style="display: inline-block;">
-                <canvas id="nutrition-calories-actual"></canvas>
-                <canvas id="nutrition-calories-target"></canvas>
-            </div>
-            <!-- <div id="nutrition-legend" class="panel-footer chart-legend"></div> -->
-        </div>
-    </div>
-    {% endblock %}
-</body>
+		    </div>
+
+		    <!-- <div id="connect" class="step" data-x="-300" data-y="600" data-scale="0.2" data-rotate="270">
+		        <h2>Connect &amp; Share</h2>
+		        <p>Real-life sharing is nuanced and rich. Galaxy Nexus makes sharing with mobile devices just as easy at it is in person. </p>
+		    </div>
+
+		    <div id="upload" class="step" data-x="-200" data-y="1500" data-rotate="180">
+		        <h2>Instant Upload</h2>
+		        <p>Your photos upload themselves with Instant Upload, which makes it much easier to share them with family and friends.</p>
+		    </div>
+
+		    <div id="music" class="step" data-x="-1200" data-y="1000" data-scale="0.8" data-rotate="270">
+		        <h2>Jam on with Google Music</h2>
+		        <p>Google Music makes discovery, purchase, and listening effortless and fun. Store your entire collection for free, and stream your music to your Galaxy Nexus, computer, or other Android devices.</p>
+		    </div> -->
+
+		</div>
+
+		<a id="arrowLeft" class="arrow">&lt;</a>
+		<a id="arrowRight" class="arrow">&gt;</a>
+
+        <footer>
+	        <h2><i>Tutorial:</i> Impressive CSS3 Product Showcase</h2>
+            <a class="tzine" href="http://tutorialzine.com/2012/02/css3-product-showcase/">Head on to <i>Tutorial<b>zine</b></i> to download this example</a>
+        </footer>
+
+        <!-- JavaScript includes -->
+        <script src="{{ STATIC_URL }}js/jquery-2.1.3.min.js"></script>
+        <script src="{{ STATIC_URL }}js/impress.js"></script>
+        <script src="{{ STATIC_URL }}js/Chart.min.js"></script>
+        <script src="{{ STATIC_URL }}js/moment-with-locales.js"></script>
+        <script src="{{ STATIC_URL }}js/common.js"></script>
+        <script src="{{ STATIC_URL }}js/body.js"></script>
+        <script src="{{ STATIC_URL }}js/site.js"></script>
+        <script>
+
+        </script>
+    </body>
+</html>

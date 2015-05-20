@@ -6,28 +6,31 @@ var body = new function() {
     this.numIntervals = 7;
     this.intervals = undefined;
     this.refresh = function() {
-        // Replace canvas to clear any previous gra
+        // Replace canvas to clear any previous graph
         $('#' + this.divid).replaceWith('<canvas id="' + this.divid + '"></canvas>');
         var ctx = $("#" + this.divid).get(0).getContext("2d");
+        // ctx.clearRect(0,0,$(this.divid)[0].width,$(this.divid)[0].height);
+        // ctx.fillStyle="#FF0000";
+        // ctx.fillRect(20,20,150,100);
         // Build labels for this week
         this.intervals = [];
 
         // Build intervals for this aggregation
-        console.log("Building intervals from aggregation '" + this.aggregation + "'")
+        // console.log("Building intervals from aggregation '" + this.aggregation + "'")
         for(i = this.numIntervals - 1; i >= 0; i--) {
             this.intervals.push(moment().subtract(i, this.aggregation));
         }
-        console.log("Intervals: " + this.intervals)
+        // console.log("Intervals: " + this.intervals)
         // Build dataset
         $.when(
             $.get('/weight'),
             $.get('/bodyfat')
         ).then( function (rawWeight, rawBodyfat) {
-            console.log(rawWeight[0]);
-            console.log(rawBodyfat[0]);
+            // console.log(rawWeight[0]);
+            // console.log(rawBodyfat[0]);
             console.log("Building weight dataset")
             aggregatedWeight = aggregate(rawWeight[0], body.aggregation, body.intervals, body.aggregation_strategy);
-            console.log(aggregatedWeight);
+            // console.log(aggregatedWeight);
             weight = {
                 label: "Weight",
                 fillColor: "rgba(0,0,220,0.6)",
@@ -40,7 +43,7 @@ var body = new function() {
             };
             console.log("Building bodyfat dataset")
             var bodyfat = aggregate(rawBodyfat[0], body.aggregation, body.intervals, body.aggregation_strategy);
-            console.log(bodyfat);
+            // console.log(bodyfat);
             var leanMass = [];
             for(i = 0; i < weight['data'].length; i++){
                 if (bodyfat[i] && bodyfat[i]['value'] > 0) {
@@ -49,7 +52,7 @@ var body = new function() {
                     leanMass.push(0);
                 }
             }
-            console.log(leanMass);
+            // console.log(leanMass);
             lean = {
                 label: "Lean Mass",
                 fillColor: "rgba(0,220,0,0.6)",
@@ -68,7 +71,7 @@ var body = new function() {
                 ]
             },{scaleBeginAtZero: true});
             // populateDataSet(chart, '/weight', this.aggregation, 0, intervals);
-            $('#body-legend').html(chart.generateLegend());
+            // $('#body-legend').html(chart.generateLegend());
         });
     }
 }

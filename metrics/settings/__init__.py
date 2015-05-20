@@ -37,7 +37,7 @@ PREREQ_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'bootstrap3',
+    # 'bootstrap3',
     'rest_framework',
 ]
 
@@ -100,12 +100,12 @@ TEMPLATE_DIRS = (
     os.path.join(BASE_DIR,'templates'),
 )
 
-BOOTSTRAP3 = {
-    'include_jquery': False,
-    'jquery_url': STATIC_URL + 'js/jquery-2.1.3.min.js',
-    'base_url': STATIC_URL,
-    'css_url': STATIC_URL + 'css/bootstrap.min.css',
-    'theme_url': STATIC_URL + 'css/bootstrap-theme.min.css',
-    'javascript_url': STATIC_URL + 'js/bootstrap.min.js',
-}
-BOOTSTRAP_BASE_URL = STATIC_URL
+# BOOTSTRAP3 = {
+#     'include_jquery': False,
+#     'jquery_url': STATIC_URL + 'js/jquery-2.1.3.min.js',
+#     'base_url': STATIC_URL,
+#     'css_url': STATIC_URL + 'css/bootstrap.min.css',
+#     'theme_url': STATIC_URL + 'css/bootstrap-theme.min.css',
+#     'javascript_url': STATIC_URL + 'js/bootstrap.min.js',
+# }
+# BOOTSTRAP_BASE_URL = STATIC_URL
