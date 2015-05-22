@@ -5,4 +5,4 @@ from calories.models import Calories
 class CaloriesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Calories
-        fields = ('created', 'value', 'fat', 'carbohydrates', 'protein')
+        fields = ('created', 'date', 'name', 'value', 'fat', 'carbohydrates', 'protein')
