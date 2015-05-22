@@ -45,6 +45,7 @@ PROJECT_APPS = [
     'weight',
     'bodyfat',
     'calories',
+    'food',
 ]
 
 INSTALLED_APPS = PREREQ_APPS + PROJECT_APPS
